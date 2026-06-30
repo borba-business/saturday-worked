@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Saturday Worked</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>Saturday Worked</h1>
+    <p class="subtitle">Review the details, then open a ready-to-send email draft.</p>
+
+    <div class="tabs" role="tablist" aria-label="App sections">
+      <button class="tab active" id="composeTab" type="button">Compose</button>
+      <button class="tab" id="settingsTab" type="button">Settings</button>
+    </div>
+
+    <section id="composePanel">
+      <label for="recipientSelect">To</label>
+      <select id="recipientSelect"></select>
+
+      <label for="subject">Subject</label>
+      <input id="subject" type="text" value="Saturday Worked">
+
+      <div class="grid">
+        <div>
+          <label for="workedDate">Saturday date</label>
+          <input id="workedDate" type="text" inputmode="numeric" placeholder="dd/mm/yyyy">
+        </div>
+        <div>
+          <label for="hours">Hours</label>
+          <input id="hours" type="text" value="10:00 to 16:00">
+        </div>
+      </div>
+
+      <label for="templateSelect">Message template</label>
+      <select id="templateSelect"></select>
+
+      <label for="message">Message</label>
+      <textarea id="message"></textarea>
+
+      <div class="actions">
+        <button class="primary" id="openEmail" type="button">Open Email</button>
+        <button class="secondary" id="resetDate" type="button">Last Saturday</button>
+        <button class="secondary" id="resetMessage" type="button">Reset Message</button>
+      </div>
+
+      <p class="hint">Use <strong>{date}</strong> and <strong>{hours}</strong> in message templates. The email opens in your mail app for review before sending.</p>
+    </section>
+
+    <section id="settingsPanel" hidden>
+      <h2>Email</h2>
+      <label for="recipientName">Recipient name</label>
+      <input id="recipientName" type="text" placeholder="HR">
+
+      <label for="recipientEmail">Recipient email</label>
+      <input id="recipientEmail" type="email" placeholder="example@company.com" autocomplete="email">
+
+      <div class="actions">
+        <button class="primary" id="saveRecipient" type="button">Save Email</button>
+        <button class="secondary" id="newRecipient" type="button">New Email</button>
+      </div>
+
+      <div id="recipientList"></div>
+
+      <h2>Messages</h2>
+      <label for="templateName">Template name</label>
+      <input id="templateName" type="text" placeholder="Saturday worked">
+
+      <label for="templateBody">Template message</label>
+      <textarea id="templateBody" placeholder="Hi, I would like to confirm that I worked on Saturday {date}, from {hours}."></textarea>
+
+      <div class="actions">
+        <button class="primary" id="saveTemplate" type="button">Save Template</button>
+        <button class="secondary" id="newTemplate" type="button">New Template</button>
+      </div>
+
+      <div id="templateList"></div>
+
+      <p class="hint">Saved emails and templates are stored only in this browser using local storage.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
