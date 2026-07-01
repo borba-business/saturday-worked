@@ -19,6 +19,12 @@ const newRecipient = document.getElementById("newRecipient");
 const recipientList = document.getElementById("recipientList");
 const subject = document.getElementById("subject");
 const workedDate = document.getElementById("workedDate");
+const calendarToggle = document.getElementById("calendarToggle");
+const calendarPanel = document.getElementById("calendarPanel");
+const prevMonth = document.getElementById("prevMonth");
+const nextMonth = document.getElementById("nextMonth");
+const calendarTitle = document.getElementById("calendarTitle");
+const calendarGrid = document.getElementById("calendarGrid");
 const hours = document.getElementById("hours");
 const templateSelect = document.getElementById("templateSelect");
 const message = document.getElementById("message");
@@ -33,6 +39,7 @@ const templateList = document.getElementById("templateList");
 
 let editingRecipientId = state.selectedRecipientId;
 let editingTemplateId = state.selectedTemplateId;
+let calendarDate = new Date();
 
 function loadState() {
   try {
@@ -87,6 +94,31 @@ function toDisplayDate(date) {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
 }
 
+function parseDisplayDate(value) {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const year = Number(match[3]);
+  const date = new Date(year, month, day);
+
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+    return null;
+  }
+
+  return date;
+}
+
+function sameDay(first, second) {
+  return first.getFullYear() === second.getFullYear()
+    && first.getMonth() === second.getMonth()
+    && first.getDate() === second.getDate();
+}
+
 function getLastSaturday(fromDate) {
   const date = new Date(fromDate);
   const day = date.getDay();
@@ -111,6 +143,77 @@ function buildMessage() {
 
 function refreshMessage() {
   message.value = buildMessage();
+}
+
+function formatDateInput(value) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  const parts = [];
+
+  if (digits.length > 0) {
+    parts.push(digits.slice(0, 2));
+  }
+
+  if (digits.length > 2) {
+    parts.push(digits.slice(2, 4));
+  }
+
+  if (digits.length > 4) {
+    parts.push(digits.slice(4, 8));
+  }
+
+  return parts.join("/");
+}
+
+function setWorkedDate(date) {
+  workedDate.value = toDisplayDate(date);
+  calendarDate = new Date(date.getFullYear(), date.getMonth(), 1);
+  refreshMessage();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const today = new Date();
+  const selected = parseDisplayDate(workedDate.value);
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const start = new Date(year, month, 1 - firstDay.getDay());
+  const monthName = firstDay.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric"
+  });
+
+  calendarTitle.textContent = monthName;
+  calendarGrid.innerHTML = "";
+
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+
+    const button = document.createElement("button");
+    button.className = "calendar-day";
+    button.type = "button";
+    button.textContent = String(date.getDate());
+
+    if (date.getMonth() !== month) {
+      button.classList.add("outside");
+    }
+
+    if (sameDay(date, today)) {
+      button.classList.add("today");
+    }
+
+    if (selected && sameDay(date, selected)) {
+      button.classList.add("selected");
+    }
+
+    button.addEventListener("click", function () {
+      setWorkedDate(date);
+      calendarPanel.hidden = true;
+    });
+
+    calendarGrid.appendChild(button);
+  }
 }
 
 function renderRecipientSelect() {
@@ -409,12 +512,11 @@ function deleteTemplate(id) {
 
 subject.value = state.subject;
 hours.value = state.hours;
-workedDate.value = toDisplayDate(getLastSaturday(new Date()));
+setWorkedDate(getLastSaturday(new Date()));
 renderAllRecipients();
 loadRecipientIntoEditor(state.selectedRecipientId);
 renderAllTemplates();
 loadTemplateIntoEditor(state.selectedTemplateId);
-refreshMessage();
 
 composeTab.addEventListener("click", function () {
   showPanel("compose");
@@ -435,7 +537,17 @@ recipientSelect.addEventListener("change", function () {
 saveRecipient.addEventListener("click", saveRecipientFromEditor);
 newRecipient.addEventListener("click", createNewRecipient);
 subject.addEventListener("input", saveState);
-workedDate.addEventListener("input", refreshMessage);
+workedDate.addEventListener("input", function () {
+  workedDate.value = formatDateInput(workedDate.value);
+  const parsedDate = parseDisplayDate(workedDate.value);
+
+  if (parsedDate) {
+    calendarDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1);
+    renderCalendar();
+  }
+
+  refreshMessage();
+});
 hours.addEventListener("input", function () {
   saveState();
   refreshMessage();
@@ -451,11 +563,28 @@ templateSelect.addEventListener("change", function () {
 });
 
 resetDate.addEventListener("click", function () {
-  workedDate.value = toDisplayDate(getLastSaturday(new Date()));
-  refreshMessage();
+  setWorkedDate(getLastSaturday(new Date()));
 });
 
 resetMessage.addEventListener("click", refreshMessage);
 openEmail.addEventListener("click", openMailDraft);
 saveTemplate.addEventListener("click", saveTemplateFromEditor);
 newTemplate.addEventListener("click", createNewTemplate);
+calendarToggle.addEventListener("click", function () {
+  const parsedDate = parseDisplayDate(workedDate.value);
+
+  if (parsedDate) {
+    calendarDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1);
+  }
+
+  renderCalendar();
+  calendarPanel.hidden = !calendarPanel.hidden;
+});
+prevMonth.addEventListener("click", function () {
+  calendarDate.setMonth(calendarDate.getMonth() - 1);
+  renderCalendar();
+});
+nextMonth.addEventListener("click", function () {
+  calendarDate.setMonth(calendarDate.getMonth() + 1);
+  renderCalendar();
+});

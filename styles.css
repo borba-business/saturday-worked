@@ -142,6 +142,92 @@ select:focus {
   gap: 14px;
 }
 
+.date-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-button {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.calendar {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--field);
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.calendar-title {
+  text-align: center;
+  font-weight: 750;
+}
+
+.calendar-nav {
+  min-height: 38px;
+  padding: 8px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--line);
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-weekdays {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.calendar-day {
+  min-height: 36px;
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+}
+
+.calendar-day:hover {
+  border-color: var(--accent);
+}
+
+.calendar-day.outside {
+  color: var(--muted);
+  opacity: 0.55;
+}
+
+.calendar-day.today {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(90, 167, 255, 0.22);
+}
+
+.calendar-day.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
 .actions {
   display: flex;
   gap: 12px;
@@ -226,14 +312,18 @@ button {
     font-size: 25px;
   }
 
-  .grid,
-  .saved-row {
-    grid-template-columns: 1fr;
-  }
+      .grid,
+      .saved-row {
+        grid-template-columns: 1fr;
+      }
 
-  .saved-row input {
-    width: 22px;
-  }
+      .date-control {
+        grid-template-columns: 1fr;
+      }
+
+      .saved-row input {
+        width: 22px;
+      }
 
   button {
     width: 100%;

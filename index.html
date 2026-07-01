@@ -26,7 +26,27 @@
       <div class="grid">
         <div>
           <label for="workedDate">Saturday date</label>
-          <input id="workedDate" type="text" inputmode="numeric" placeholder="dd/mm/yyyy">
+          <div class="date-control">
+            <input id="workedDate" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy">
+            <button class="icon-button" id="calendarToggle" type="button" aria-label="Open calendar">Calendar</button>
+          </div>
+          <div class="calendar" id="calendarPanel" hidden>
+            <div class="calendar-header">
+              <button class="calendar-nav" id="prevMonth" type="button" aria-label="Previous month">&lt;</button>
+              <div class="calendar-title" id="calendarTitle"></div>
+              <button class="calendar-nav" id="nextMonth" type="button" aria-label="Next month">&gt;</button>
+            </div>
+            <div class="calendar-weekdays" aria-hidden="true">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
         </div>
         <div>
           <label for="hours">Hours</label>
