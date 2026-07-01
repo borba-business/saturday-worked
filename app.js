@@ -24,6 +24,9 @@ const calendarPanel = document.getElementById("calendarPanel");
 const prevMonth = document.getElementById("prevMonth");
 const nextMonth = document.getElementById("nextMonth");
 const calendarTitle = document.getElementById("calendarTitle");
+const calendarPicker = document.getElementById("calendarPicker");
+const calendarYear = document.getElementById("calendarYear");
+const monthGrid = document.getElementById("monthGrid");
 const calendarGrid = document.getElementById("calendarGrid");
 const hours = document.getElementById("hours");
 const templateSelect = document.getElementById("templateSelect");
@@ -40,6 +43,20 @@ const templateList = document.getElementById("templateList");
 let editingRecipientId = state.selectedRecipientId;
 let editingTemplateId = state.selectedTemplateId;
 let calendarDate = new Date();
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
 
 function loadState() {
   try {
@@ -185,6 +202,7 @@ function renderCalendar() {
 
   calendarTitle.textContent = monthName;
   calendarGrid.innerHTML = "";
+  renderCalendarPicker();
 
   for (let index = 0; index < 42; index += 1) {
     const date = new Date(start);
@@ -214,6 +232,43 @@ function renderCalendar() {
 
     calendarGrid.appendChild(button);
   }
+}
+
+function renderCalendarPicker() {
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const startYear = year - 10;
+  const endYear = year + 10;
+
+  calendarYear.innerHTML = "";
+  monthGrid.innerHTML = "";
+
+  for (let optionYear = startYear; optionYear <= endYear; optionYear += 1) {
+    const option = document.createElement("option");
+    option.value = String(optionYear);
+    option.textContent = String(optionYear);
+    option.selected = optionYear === year;
+    calendarYear.appendChild(option);
+  }
+
+  monthNames.forEach((name, index) => {
+    const button = document.createElement("button");
+    button.className = "month-button";
+    button.type = "button";
+    button.textContent = name.slice(0, 3);
+
+    if (index === month) {
+      button.classList.add("selected");
+    }
+
+    button.addEventListener("click", function () {
+      calendarDate = new Date(Number(calendarYear.value), index, 1);
+      calendarPicker.hidden = true;
+      renderCalendar();
+    });
+
+    monthGrid.appendChild(button);
+  });
 }
 
 function renderRecipientSelect() {
@@ -581,10 +636,20 @@ calendarToggle.addEventListener("click", function () {
   calendarPanel.hidden = !calendarPanel.hidden;
 });
 prevMonth.addEventListener("click", function () {
+  calendarPicker.hidden = true;
   calendarDate.setMonth(calendarDate.getMonth() - 1);
   renderCalendar();
 });
 nextMonth.addEventListener("click", function () {
+  calendarPicker.hidden = true;
   calendarDate.setMonth(calendarDate.getMonth() + 1);
+  renderCalendar();
+});
+calendarTitle.addEventListener("click", function () {
+  calendarPicker.hidden = !calendarPicker.hidden;
+  renderCalendarPicker();
+});
+calendarYear.addEventListener("change", function () {
+  calendarDate = new Date(Number(calendarYear.value), calendarDate.getMonth(), 1);
   renderCalendar();
 });

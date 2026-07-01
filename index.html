@@ -33,8 +33,13 @@
           <div class="calendar" id="calendarPanel" hidden>
             <div class="calendar-header">
               <button class="calendar-nav" id="prevMonth" type="button" aria-label="Previous month">&lt;</button>
-              <div class="calendar-title" id="calendarTitle"></div>
+              <button class="calendar-title" id="calendarTitle" type="button" aria-label="Choose month and year"></button>
               <button class="calendar-nav" id="nextMonth" type="button" aria-label="Next month">&gt;</button>
+            </div>
+            <div class="calendar-picker" id="calendarPicker" hidden>
+              <label class="calendar-year-label" for="calendarYear">Year</label>
+              <select id="calendarYear"></select>
+              <div class="month-grid" id="monthGrid"></div>
             </div>
             <div class="calendar-weekdays" aria-hidden="true">
               <span>Sun</span>

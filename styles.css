@@ -173,8 +173,17 @@ select:focus {
 }
 
 .calendar-title {
+  border: 0;
+  background: transparent;
+  color: var(--text);
   text-align: center;
   font-weight: 750;
+  min-height: 38px;
+  padding: 8px;
+}
+
+.calendar-title:hover {
+  color: var(--accent);
 }
 
 .calendar-nav {
@@ -197,6 +206,44 @@ select:focus {
   font-size: 12px;
   text-align: center;
   margin-bottom: 6px;
+}
+
+.calendar-picker {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.calendar-year-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.month-button {
+  min-height: 38px;
+  padding: 8px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.month-button:hover {
+  border-color: var(--accent);
+}
+
+.month-button.selected {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
 }
 
 .calendar-day {
