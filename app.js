@@ -39,9 +39,17 @@ const templateBody = document.getElementById("templateBody");
 const saveTemplate = document.getElementById("saveTemplate");
 const newTemplate = document.getElementById("newTemplate");
 const templateList = document.getElementById("templateList");
+const reminderName = document.getElementById("reminderName");
+const reminderDay = document.getElementById("reminderDay");
+const reminderTime = document.getElementById("reminderTime");
+const saveReminder = document.getElementById("saveReminder");
+const newReminder = document.getElementById("newReminder");
+const downloadReminders = document.getElementById("downloadReminders");
+const reminderList = document.getElementById("reminderList");
 
 let editingRecipientId = state.selectedRecipientId;
 let editingTemplateId = state.selectedTemplateId;
+let editingReminderId = state.reminders[0] ? state.reminders[0].id : "";
 let calendarDate = new Date();
 const monthNames = [
   "January",
@@ -74,6 +82,7 @@ function loadState() {
 
     return {
       recipients,
+      reminders: Array.isArray(saved.reminders) ? saved.reminders : [],
       hours: saved.hours || "10:00 to 16:00",
       subject: saved.subject || "Saturday Worked",
       selectedRecipientId: saved.selectedRecipientId || (recipients[0] ? recipients[0].id : ""),
@@ -83,6 +92,7 @@ function loadState() {
   } catch (error) {
     return {
       recipients: [],
+      reminders: [],
       hours: "10:00 to 16:00",
       subject: "Saturday Worked",
       selectedRecipientId: "",
@@ -418,6 +428,50 @@ function renderAllTemplates() {
   renderTemplateList();
 }
 
+function renderReminderList() {
+  reminderList.innerHTML = "";
+
+  state.reminders.forEach((reminder) => {
+    const row = document.createElement("div");
+    row.className = "saved-row";
+
+    const marker = document.createElement("div");
+    marker.className = "saved-title";
+    marker.textContent = "Alert";
+
+    const content = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "saved-title";
+    title.textContent = reminder.name;
+
+    const preview = document.createElement("div");
+    preview.className = "saved-preview";
+    preview.textContent = `${dayLabel(reminder.day)} at ${reminder.time}`;
+
+    content.append(title, preview);
+
+    const editButton = document.createElement("button");
+    editButton.className = "secondary";
+    editButton.type = "button";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", function () {
+      editingReminderId = reminder.id;
+      loadReminderIntoEditor(reminder.id);
+    });
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "danger";
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", function () {
+      deleteReminder(reminder.id);
+    });
+
+    row.append(marker, content, editButton, deleteButton);
+    reminderList.appendChild(row);
+  });
+}
+
 function loadRecipientIntoEditor(id) {
   const recipient = state.recipients.find((item) => item.id === id);
 
@@ -435,6 +489,21 @@ function loadTemplateIntoEditor(id) {
   const template = state.templates.find((item) => item.id === id) || state.templates[0];
   templateName.value = template.name;
   templateBody.value = template.body;
+}
+
+function loadReminderIntoEditor(id) {
+  const reminder = state.reminders.find((item) => item.id === id);
+
+  if (!reminder) {
+    reminderName.value = "";
+    reminderDay.value = "MO";
+    reminderTime.value = "09:00";
+    return;
+  }
+
+  reminderName.value = reminder.name;
+  reminderDay.value = reminder.day;
+  reminderTime.value = reminder.time;
 }
 
 function showPanel(name) {
@@ -565,6 +634,145 @@ function deleteTemplate(id) {
   refreshMessage();
 }
 
+function saveReminderFromEditor() {
+  const name = reminderName.value.trim() || "Send Saturday worked email";
+  const day = reminderDay.value;
+  const time = reminderTime.value || "09:00";
+  const existing = state.reminders.find((item) => item.id === editingReminderId);
+
+  if (existing) {
+    existing.name = name;
+    existing.day = day;
+    existing.time = time;
+  } else {
+    editingReminderId = `reminder-${Date.now()}`;
+    state.reminders.push({ id: editingReminderId, name, day, time });
+  }
+
+  saveState();
+  renderReminderList();
+}
+
+function createNewReminder() {
+  editingReminderId = "";
+  reminderName.value = "";
+  reminderDay.value = "MO";
+  reminderTime.value = "09:00";
+  reminderName.focus();
+}
+
+function deleteReminder(id) {
+  state.reminders = state.reminders.filter((item) => item.id !== id);
+
+  if (editingReminderId === id) {
+    editingReminderId = state.reminders[0] ? state.reminders[0].id : "";
+    loadReminderIntoEditor(editingReminderId);
+  }
+
+  saveState();
+  renderReminderList();
+}
+
+function dayLabel(day) {
+  return {
+    MO: "Monday",
+    TU: "Tuesday",
+    WE: "Wednesday",
+    TH: "Thursday",
+    FR: "Friday",
+    SA: "Saturday",
+    SU: "Sunday"
+  }[day] || "Monday";
+}
+
+function nextDateForWeekday(dayCode, timeValue) {
+  const weekdayIndex = {
+    SU: 0,
+    MO: 1,
+    TU: 2,
+    WE: 3,
+    TH: 4,
+    FR: 5,
+    SA: 6
+  }[dayCode];
+  const [hoursValue, minutesValue] = timeValue.split(":").map(Number);
+  const date = new Date();
+  const daysUntil = (weekdayIndex - date.getDay() + 7) % 7;
+
+  date.setDate(date.getDate() + daysUntil);
+  date.setHours(hoursValue, minutesValue, 0, 0);
+
+  if (date < new Date()) {
+    date.setDate(date.getDate() + 7);
+  }
+
+  return date;
+}
+
+function toIcsDate(date) {
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+}
+
+function escapeIcsText(value) {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll(",", "\\,")
+    .replaceAll(";", "\\;")
+    .replaceAll("\n", "\\n");
+}
+
+function downloadReminderCalendar() {
+  if (!state.reminders.length) {
+    createNewReminder();
+    return;
+  }
+
+  const nowStamp = toIcsDate(new Date());
+  const events = state.reminders.map((reminder) => {
+    const start = nextDateForWeekday(reminder.day, reminder.time);
+    const end = new Date(start.getTime() + 15 * 60 * 1000);
+    const summary = escapeIcsText(reminder.name);
+    const description = escapeIcsText("Open Saturday Worked and send the email.");
+
+    return [
+      "BEGIN:VEVENT",
+      `UID:${reminder.id}@saturday-worked`,
+      `DTSTAMP:${nowStamp}`,
+      `DTSTART:${toIcsDate(start)}`,
+      `DTEND:${toIcsDate(end)}`,
+      `RRULE:FREQ=WEEKLY;BYDAY=${reminder.day}`,
+      `SUMMARY:${summary}`,
+      `DESCRIPTION:${description}`,
+      "BEGIN:VALARM",
+      "TRIGGER:PT0S",
+      "ACTION:DISPLAY",
+      `DESCRIPTION:${summary}`,
+      "END:VALARM",
+      "END:VEVENT"
+    ].join("\r\n");
+  });
+
+  const calendar = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Saturday Worked//Reminder Calendar//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    ...events,
+    "END:VCALENDAR"
+  ].join("\r\n");
+  const blob = new Blob([calendar], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "saturday-worked-reminders.ics";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 subject.value = state.subject;
 hours.value = state.hours;
 setWorkedDate(getLastSaturday(new Date()));
@@ -572,6 +780,8 @@ renderAllRecipients();
 loadRecipientIntoEditor(state.selectedRecipientId);
 renderAllTemplates();
 loadTemplateIntoEditor(state.selectedTemplateId);
+renderReminderList();
+loadReminderIntoEditor(editingReminderId);
 
 composeTab.addEventListener("click", function () {
   showPanel("compose");
@@ -625,6 +835,9 @@ resetMessage.addEventListener("click", refreshMessage);
 openEmail.addEventListener("click", openMailDraft);
 saveTemplate.addEventListener("click", saveTemplateFromEditor);
 newTemplate.addEventListener("click", createNewTemplate);
+saveReminder.addEventListener("click", saveReminderFromEditor);
+newReminder.addEventListener("click", createNewReminder);
+downloadReminders.addEventListener("click", downloadReminderCalendar);
 calendarToggle.addEventListener("click", function () {
   const parsedDate = parseDisplayDate(workedDate.value);
 

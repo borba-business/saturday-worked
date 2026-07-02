@@ -103,7 +103,38 @@
 
       <div id="templateList"></div>
 
-      <p class="hint">Saved emails and templates are stored only in this browser using local storage.</p>
+      <h2>Reminders</h2>
+      <label for="reminderName">Reminder name</label>
+      <input id="reminderName" type="text" placeholder="Send Saturday worked email">
+
+      <div class="grid">
+        <div>
+          <label for="reminderDay">Day</label>
+          <select id="reminderDay">
+            <option value="MO">Monday</option>
+            <option value="TU">Tuesday</option>
+            <option value="WE">Wednesday</option>
+            <option value="TH">Thursday</option>
+            <option value="FR">Friday</option>
+            <option value="SA">Saturday</option>
+            <option value="SU">Sunday</option>
+          </select>
+        </div>
+        <div>
+          <label for="reminderTime">Time</label>
+          <input id="reminderTime" type="time" value="09:00">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="saveReminder" type="button">Save Reminder</button>
+        <button class="secondary" id="newReminder" type="button">New Reminder</button>
+        <button class="secondary" id="downloadReminders" type="button">Download Calendar</button>
+      </div>
+
+      <div id="reminderList"></div>
+
+      <p class="hint">Saved emails, templates, and reminder definitions are stored only in this browser. Calendar alerts are installed separately through the downloaded calendar file.</p>
     </section>
   </main>
 
