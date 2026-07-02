@@ -42,6 +42,7 @@ const templateList = document.getElementById("templateList");
 const reminderName = document.getElementById("reminderName");
 const reminderDay = document.getElementById("reminderDay");
 const reminderTime = document.getElementById("reminderTime");
+const reminderDuration = document.getElementById("reminderDuration");
 const saveReminder = document.getElementById("saveReminder");
 const newReminder = document.getElementById("newReminder");
 const downloadReminders = document.getElementById("downloadReminders");
@@ -446,7 +447,7 @@ function renderReminderList() {
 
     const preview = document.createElement("div");
     preview.className = "saved-preview";
-    preview.textContent = `${dayLabel(reminder.day)} at ${reminder.time}`;
+    preview.textContent = `${dayLabel(reminder.day)} at ${reminder.time}, for ${durationLabel(reminder.durationMonths)}`;
 
     content.append(title, preview);
 
@@ -498,12 +499,14 @@ function loadReminderIntoEditor(id) {
     reminderName.value = "";
     reminderDay.value = "MO";
     reminderTime.value = "09:00";
+    reminderDuration.value = "12";
     return;
   }
 
   reminderName.value = reminder.name;
   reminderDay.value = reminder.day;
   reminderTime.value = reminder.time;
+  reminderDuration.value = String(reminder.durationMonths || 12);
 }
 
 function showPanel(name) {
@@ -638,15 +641,17 @@ function saveReminderFromEditor() {
   const name = reminderName.value.trim() || "Send Saturday worked email";
   const day = reminderDay.value;
   const time = reminderTime.value || "09:00";
+  const durationMonths = Number(reminderDuration.value) || 12;
   const existing = state.reminders.find((item) => item.id === editingReminderId);
 
   if (existing) {
     existing.name = name;
     existing.day = day;
     existing.time = time;
+    existing.durationMonths = durationMonths;
   } else {
     editingReminderId = `reminder-${Date.now()}`;
-    state.reminders.push({ id: editingReminderId, name, day, time });
+    state.reminders.push({ id: editingReminderId, name, day, time, durationMonths });
   }
 
   saveState();
@@ -658,6 +663,7 @@ function createNewReminder() {
   reminderName.value = "";
   reminderDay.value = "MO";
   reminderTime.value = "09:00";
+  reminderDuration.value = "12";
   reminderName.focus();
 }
 
@@ -685,6 +691,20 @@ function dayLabel(day) {
   }[day] || "Monday";
 }
 
+function durationLabel(months) {
+  const durationMonths = Number(months) || 12;
+
+  if (durationMonths === 12) {
+    return "1 year";
+  }
+
+  if (durationMonths % 12 === 0) {
+    return `${durationMonths / 12} years`;
+  }
+
+  return durationMonths === 1 ? "1 month" : `${durationMonths} months`;
+}
+
 function nextDateForWeekday(dayCode, timeValue) {
   const weekdayIndex = {
     SU: 0,
@@ -709,6 +729,13 @@ function nextDateForWeekday(dayCode, timeValue) {
   return date;
 }
 
+function recurrenceEndDate(startDate, durationMonths) {
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + (Number(durationMonths) || 12));
+  endDate.setHours(23, 59, 59, 0);
+  return endDate;
+}
+
 function toIcsDate(date) {
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
 }
@@ -731,6 +758,7 @@ function downloadReminderCalendar() {
   const events = state.reminders.map((reminder) => {
     const start = nextDateForWeekday(reminder.day, reminder.time);
     const end = new Date(start.getTime() + 15 * 60 * 1000);
+    const repeatUntil = recurrenceEndDate(start, reminder.durationMonths);
     const summary = escapeIcsText(reminder.name);
     const description = escapeIcsText("Open Saturday Worked and send the email.");
 
@@ -740,7 +768,7 @@ function downloadReminderCalendar() {
       `DTSTAMP:${nowStamp}`,
       `DTSTART:${toIcsDate(start)}`,
       `DTEND:${toIcsDate(end)}`,
-      `RRULE:FREQ=WEEKLY;BYDAY=${reminder.day}`,
+      `RRULE:FREQ=WEEKLY;BYDAY=${reminder.day};UNTIL=${toIcsDate(repeatUntil)}`,
       `SUMMARY:${summary}`,
       `DESCRIPTION:${description}`,
       "BEGIN:VALARM",
